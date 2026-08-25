@@ -1,12 +1,9 @@
- """
-   Archivo fantasma (mock) para soundfile.
-   Qwen-Agent intenta importar esta librería de audio obligatoriamente en su código base,
-   incluso si solo se usa para texto. Este archivo evita el error de importación
-   sin necesidad de instalar dependencias de audio a nivel de sistema operativo.
-   """
-   
-   def read(*args, **kwargs):
-       raise NotImplementedError("Audio features are disabled in this deployment.")
-   
-   def write(*args, **kwargs):
-       raise NotImplementedError("Audio features are disabled in this deployment.")
+"""
+Archivo fantasma para evitar el error de importacion de soundfile en qwen-agent.
+"""
+
+def read(*args, **kwargs):
+    return None, 22050
+
+def write(*args, **kwargs):
+    pass
