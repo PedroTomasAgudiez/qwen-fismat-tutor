@@ -8,88 +8,65 @@
   <!-- Marked.js para Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-  <!-- Configuración de MathJax ANTES de cargar la librería -->
+  <!-- MathJax configuración -->
   <script>
     window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true,
-        packages: {'[+]': ['ams']}
-      },
-      loader: {
-        load: ['[tex]/ams']
+        processEscapes: true
       },
       chtml: {
         scale: 0.92,
-        minScaleAdjust: 0.75,
-        mtextInheritFont: true
+        minScaleAdjust: 0.75
       },
       options: {
-        enableMenu: false,
-        renderActions: {
-          addMenu: []
-        }
-      },
-      startup: {
-        ready: () => {
-          MathJax.startup.defaultReady();
-          MathJax.startup.promise.then(() => {
-            console.log('MathJax inicializado correctamente');
-          });
-        }
+        enableMenu: false
       }
     };
   </script>
-
-  <!-- Motor CHTML (más predecible que SVG para tamaños) -->
-  <script type="text/javascript" id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
-  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html { font-size: 16px; }
-
     body {
+      margin: 0;
+      padding: 0;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: #0f172a;
+      background-color: #0f172a;
       color: #e5e7eb;
       line-height: 1.6;
     }
 
-    main {
+    .container {
       max-width: 900px;
       margin: 0 auto;
       padding: 16px;
       display: flex;
       flex-direction: column;
       height: 100vh;
+      box-sizing: border-box;
     }
 
     h1 {
       font-size: 1.4rem;
-      margin-bottom: 4px;
+      margin: 0 0 4px 0;
       color: #f8fafc;
     }
 
     .subtitle {
       color: #94a3b8;
-      margin-bottom: 14px;
+      margin: 0 0 14px 0;
       font-size: 0.9rem;
     }
 
-    /* ===== ÁREA DE CHAT ===== */
     #chat {
       flex: 1;
       overflow-y: auto;
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 14px;
-      background: #111827;
+      background-color: #111827;
       margin-bottom: 12px;
-      scroll-behavior: smooth;
     }
 
     .msg {
@@ -101,10 +78,11 @@
       line-height: 1.65;
       word-wrap: break-word;
       overflow-wrap: break-word;
+      box-sizing: border-box;
     }
 
     .user {
-      background: #2563eb;
+      background-color: #2563eb;
       color: #ffffff;
       margin-left: auto;
       border-bottom-right-radius: 4px;
@@ -112,25 +90,19 @@
     }
 
     .assistant {
-      background: #1f2937;
+      background-color: #1f2937;
       border: 1px solid #374151;
       color: #e5e7eb;
       border-bottom-left-radius: 4px;
     }
 
-    /* ===== ESTILOS MARKDOWN DENTRO DE RESPUESTAS ===== */
+    /* Estilos Markdown */
     .assistant p { margin: 0.45em 0; }
     .assistant p:first-child { margin-top: 0; }
     .assistant p:last-child { margin-bottom: 0; }
-
-    .assistant ul, .assistant ol {
-      padding-left: 20px;
-      margin: 0.5em 0;
-    }
-
+    .assistant ul, .assistant ol { padding-left: 20px; margin: 0.5em 0; }
     .assistant li { margin: 0.2em 0; }
-
-    .assistant h1, .assistant h2, .assistant h3, .assistant h4 {
+    .assistant h1, .assistant h2, .assistant h3 {
       margin: 0.7em 0 0.35em 0;
       color: #f8fafc;
       line-height: 1.3;
@@ -138,12 +110,11 @@
     .assistant h1 { font-size: 1.25em; }
     .assistant h2 { font-size: 1.15em; }
     .assistant h3 { font-size: 1.05em; }
-
     .assistant strong { color: #f8fafc; }
     .assistant em { color: #cbd5e1; }
 
     .assistant code {
-      background: #0f172a;
+      background-color: #0f172a;
       padding: 2px 6px;
       border-radius: 4px;
       font-family: 'Fira Code', 'Consolas', monospace;
@@ -152,7 +123,7 @@
     }
 
     .assistant pre {
-      background: #0f172a;
+      background-color: #0f172a;
       padding: 12px;
       border-radius: 8px;
       overflow-x: auto;
@@ -161,7 +132,7 @@
     }
 
     .assistant pre code {
-      background: transparent;
+      background-color: transparent;
       padding: 0;
       color: #e5e7eb;
       font-size: 0.85em;
@@ -185,18 +156,9 @@
       padding: 6px 10px;
       text-align: left;
     }
-    .assistant th { background: #0f172a; color: #f8fafc; }
+    .assistant th { background-color: #0f172a; color: #f8fafc; }
 
-    .assistant hr {
-      border: none;
-      border-top: 1px solid #374151;
-      margin: 0.8em 0;
-    }
-
-    /* ===== CONTROL DE TAMAÑO MATHJAX (CHTML) ===== */
-    /* El tamaño se controla principalmente desde la config JS (scale: 0.92).
-       Este CSS actúa como red de seguridad adicional. */
-
+    /* MathJax: control de tamaño y desbordamiento */
     .assistant mjx-container {
       display: inline-block;
       max-width: 100%;
@@ -204,37 +166,22 @@
       overflow-y: hidden;
       vertical-align: middle;
       padding: 1px 0;
-      font-size: inherit; /* Hereda del .assistant (0.95rem) */
     }
 
     .assistant mjx-container[display="true"] {
       display: block;
       margin: 0.8em 0;
       text-align: center;
-      font-size: 1.05em; /* Ligeramente mayor para ecuaciones de bloque */
     }
 
-    /* Scrollbar fino para fórmulas anchas */
     .assistant mjx-container::-webkit-scrollbar { height: 4px; }
-    .assistant mjx-container::-webkit-scrollbar-track { background: transparent; }
     .assistant mjx-container::-webkit-scrollbar-thumb {
-      background: #475569;
+      background-color: #475569;
       border-radius: 2px;
     }
 
-    /* Forzar tamaño base de MathJax si el navegador ignora la config */
-    .assistant mjx-container,
-    .assistant mjx-container * {
-      font-size: inherit !important;
-    }
-
-    .assistant mjx-container[display="true"],
-    .assistant mjx-container[display="true"] * {
-      font-size: 1.05em !important;
-    }
-
-    /* ===== FORMULARIO ===== */
-    form {
+    /* Formulario */
+    .input-area {
       display: grid;
       grid-template-columns: 150px 1fr auto auto;
       gap: 10px;
@@ -247,10 +194,11 @@
       padding: 10px 12px;
       font-size: 0.92rem;
       font-family: inherit;
+      box-sizing: border-box;
     }
 
     select, textarea {
-      background: #020617;
+      background-color: #020617;
       color: #e5e7eb;
     }
 
@@ -263,15 +211,15 @@
     button {
       cursor: pointer;
       border: none;
-      background: #2563eb;
+      background-color: #2563eb;
       color: #ffffff;
       font-weight: 600;
-      transition: background 0.2s;
+      transition: background-color 0.2s;
       white-space: nowrap;
     }
-    button:hover { background: #1d4ed8; }
-    button.secondary { background: #334155; }
-    button.secondary:hover { background: #475569; }
+    button:hover { background-color: #1d4ed8; }
+    button.secondary { background-color: #334155; }
+    button.secondary:hover { background-color: #475569; }
 
     .status {
       margin-top: 8px;
@@ -280,24 +228,21 @@
       text-align: center;
     }
 
-    /* ===== RESPONSIVE ===== */
     @media (max-width: 700px) {
-      form { grid-template-columns: 1fr; }
+      .input-area { grid-template-columns: 1fr; }
       .msg { max-width: 95%; font-size: 0.9rem; }
-      main { padding: 10px; }
+      .container { padding: 10px; }
     }
   </style>
 </head>
 <body>
-  <main>
+  <div class="container">
     <h1>🧮 QwenFisMat Tutor</h1>
-    <div class="subtitle">
-      Tutor multiagente de física y matemáticas universitarias.
-    </div>
+    <div class="subtitle">Tutor multiagente de física y matemáticas universitarias.</div>
 
     <div id="chat"></div>
 
-    <form id="chat-form">
+    <div class="input-area">
       <select id="mode" title="Modo del agente">
         <option>Auto</option>
         <option>Tutoría</option>
@@ -322,84 +267,85 @@
       <textarea
         id="message"
         placeholder="Escriba su pregunta de física o matemáticas..."
-        required
       ></textarea>
 
-      <button type="submit">Enviar</button>
+      <button type="button" id="send-btn">Enviar</button>
       <button type="button" class="secondary" id="new-session">Nueva sesión</button>
-    </form>
+    </div>
 
     <div class="status" id="status">Sesión lista.</div>
-  </main>
+  </div>
 
   <script>
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("chat-form");
-    const messageInput = document.getElementById("message");
-    const modeSelect = document.getElementById("mode");
-    const statusEl = document.getElementById("status");
-    const newSessionBtn = document.getElementById("new-session");
+    // Esperar a que el DOM esté listo
+    document.addEventListener('DOMContentLoaded', function() {
+      
+      var chat = document.getElementById("chat");
+      var messageInput = document.getElementById("message");
+      var modeSelect = document.getElementById("mode");
+      var statusEl = document.getElementById("status");
+      var sendBtn = document.getElementById("send-btn");
+      var newSessionBtn = document.getElementById("new-session");
 
-    // Configurar marked para que no procese LaTeX como Markdown
-    marked.setOptions({
-      breaks: true,
-      gfm: true,
-      headerIds: false,
-      mangle: false
-    });
-
-    function getSessionId() {
-      let sessionId = localStorage.getItem("qwen_fismat_session");
-      if (!sessionId) {
-        sessionId = (crypto.randomUUID)
-          ? crypto.randomUUID()
-          : Date.now().toString(36) + Math.random().toString(36).slice(2);
-        localStorage.setItem("qwen_fismat_session", sessionId);
+      // Configurar marked si está disponible
+      if (typeof marked !== 'undefined' && marked.setOptions) {
+        marked.setOptions({
+          breaks: true,
+          gfm: true
+        });
       }
-      return sessionId;
-    }
 
-    let sessionId = getSessionId();
-
-    function addMessage(role, text) {
-      const div = document.createElement("div");
-      div.className = `msg ${role}`;
-
-      if (role === "assistant") {
-        // Convertir Markdown a HTML
-        div.innerHTML = marked.parse(text);
-
-        // Renderizar LaTeX con MathJax después de insertar en el DOM
-        if (window.MathJax && MathJax.typesetPromise) {
-          MathJax.typesetPromise([div])
-            .then(() => {
-              chat.scrollTop = chat.scrollHeight;
-            })
-            .catch((err) => console.error("MathJax error:", err));
+      function getSessionId() {
+        var sessionId = localStorage.getItem("qwen_fismat_session");
+        if (!sessionId) {
+          sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+          localStorage.setItem("qwen_fismat_session", sessionId);
         }
-      } else {
-        div.textContent = text;
+        return sessionId;
       }
 
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
+      var sessionId = getSessionId();
 
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
+      function addMessage(role, text) {
+        var div = document.createElement("div");
+        div.className = "msg " + role;
 
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const message = messageInput.value.trim();
-      if (!message) return;
+        if (role === "assistant") {
+          // Convertir Markdown a HTML si marked está disponible
+          if (typeof marked !== 'undefined' && marked.parse) {
+            div.innerHTML = marked.parse(text);
+          } else {
+            div.textContent = text;
+          }
 
-      addMessage("user", message);
-      messageInput.value = "";
-      setStatus("Consultando al tutor...");
+          // Renderizar LaTeX si MathJax está disponible
+          if (window.MathJax && MathJax.typesetPromise) {
+            MathJax.typesetPromise([div]).catch(function(err) {
+              console.error("MathJax error:", err);
+            });
+          }
+        } else {
+          div.textContent = text;
+        }
 
-      try {
-        const response = await fetch("/chat", {
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function setStatus(text) {
+        statusEl.textContent = text;
+      }
+
+      function sendMessage() {
+        var message = messageInput.value.trim();
+        if (!message) return;
+
+        addMessage("user", message);
+        messageInput.value = "";
+        setStatus("Consultando al tutor...");
+        sendBtn.disabled = true;
+
+        fetch("/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -407,34 +353,49 @@
             mode: modeSelect.value,
             message: message
           })
+        })
+        .then(function(response) { return response.json(); })
+        .then(function(data) {
+          sendBtn.disabled = false;
+          if (data.error) {
+            addMessage("assistant", data.error);
+            setStatus("Error.");
+            return;
+          }
+          if (data.session_id) {
+            sessionId = data.session_id;
+            localStorage.setItem("qwen_fismat_session", sessionId);
+          }
+          addMessage("assistant", data.answer || "Sin respuesta.");
+          setStatus("Respuesta recibida.");
+        })
+        .catch(function(error) {
+          sendBtn.disabled = false;
+          addMessage("assistant", "Error de conexión con el backend.");
+          setStatus("Error de conexión.");
+          console.error("Fetch error:", error);
         });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          addMessage("assistant", data.error || "Error del servidor.");
-          setStatus("Error.");
-          return;
-        }
-
-        sessionId = data.session_id || sessionId;
-        localStorage.setItem("qwen_fismat_session", sessionId);
-
-        addMessage("assistant", data.answer || "Sin respuesta.");
-        setStatus("Respuesta recibida.");
-      } catch (error) {
-        addMessage("assistant", "Error de conexión con el backend.");
-        setStatus("Error de conexión.");
       }
-    });
 
-    newSessionBtn.addEventListener("click", () => {
-      sessionId = (crypto.randomUUID)
-        ? crypto.randomUUID()
-        : Date.now().toString(36) + Math.random().toString(36).slice(2);
-      localStorage.setItem("qwen_fismat_session", sessionId);
-      chat.innerHTML = "";
-      setStatus("Nueva sesión creada.");
+      // Event listeners
+      sendBtn.addEventListener("click", sendMessage);
+
+      messageInput.addEventListener("keydown", function(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+
+      newSessionBtn.addEventListener("click", function() {
+        sessionId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+        localStorage.setItem("qwen_fismat_session", sessionId);
+        chat.innerHTML = "";
+        setStatus("Nueva sesión creada.");
+      });
+
+      // Mensaje de bienvenida
+      addMessage("assistant", "¡Hola! Soy tu tutor de física y matemáticas. ¿En qué puedo ayudarte hoy?");
     });
   </script>
 </body>
