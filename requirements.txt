@@ -6,3 +6,8 @@ requests
 sympy
 supabase
 qdrant-client
+tqdm
+json5
+openai
+tiktoken
+pillow
