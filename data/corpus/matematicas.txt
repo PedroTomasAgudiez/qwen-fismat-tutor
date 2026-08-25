@@ -1,0 +1,20 @@
+Matemáticas universitarias básicas.
+
+Derivadas:
+La derivada de una función en un punto representa la razón de cambio instantánea de la función respecto a su variable. Geométricamente, es la pendiente de la recta tangente a la curva en ese punto.
+
+Reglas básicas de derivación:
+- La derivada de una constante es cero.
+- La derivada de x^n es n*x^(n-1).
+- La derivada de una suma es la suma de las derivadas.
+- La regla del producto establece que (f*g)' = f'*g + f*g'.
+- La regla de la cadena establece que si h(x)=f(g(x)), entonces h'(x)=f'(g(x))*g'(x).
+
+Integrales:
+La integral indefinida representa una familia de antiderivadas. La integral definida representa el área neta bajo la curva entre dos límites.
+
+Teorema fundamental del cálculo:
+Si f es continua en [a,b] y F es una antiderivada de f, entonces la integral definida de f entre a y b es F(b)-F(a).
+
+Álgebra lineal:
+Un sistema de ecuaciones lineales puede representarse como Ax=b, donde A es una matriz, x es el vector de incógnitas y b es el vector de términos independientes. Si A es invertible, la solución única es x=A^(-1)b.
