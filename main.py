@@ -677,13 +677,23 @@ QWEN_API_BASE = os.getenv("QWEN_API_BASE", "https://dashscope.aliyuncs.com/compa
 llm_main = {
     "model": MAIN_MODEL,
     "model_server": QWEN_API_BASE,
-    "api_key": DASHSCOPE_API_KEY
+    "api_key": DASHSCOPE_API_KEY,
+    "generate_cfg": {
+        "max_tokens": 4096,
+        "temperature": 0.7,
+        "top_p": 0.9
+    }
 }
 
 llm_router = {
     "model": ROUTER_MODEL,
     "model_server": QWEN_API_BASE,
-    "api_key": DASHSCOPE_API_KEY
+    "api_key": DASHSCOPE_API_KEY,
+    "generate_cfg": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 0.9
+    }
 }
 
 
@@ -751,17 +761,25 @@ def run_agent(agent: Any, messages: List[Dict[str, str]]) -> str:
         return "El agente no está disponible. Revise la configuración."
 
     final = ""
+    accumulated_parts = []
 
     try:
         for event in agent.run(messages=messages):
             text = extract_text(event)
             if text:
                 final = text
+                accumulated_parts.append(text)
     except Exception as e:
         logger.error(f"Error ejecutando agente: {e}")
+        if accumulated_parts:
+            return accumulated_parts[-1].strip()
         return f"Error del agente: {e}"
 
-    return final.strip() or "El agente no devolvió respuesta."
+    result = final.strip()
+    if not result:
+        result = "El agente no devolvió respuesta."
+    
+    return result
 
 
 def classify(message: str, context: str) -> str:
