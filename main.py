@@ -686,6 +686,46 @@ llm_router = {
     "api_key": DASHSCOPE_API_KEY
 }
 
+
+def build_agent(name: str, description: str, prompt: str, tools: List[Any], llm_cfg: Dict[str, Any]):
+    try:
+        kwargs = {
+            "name": name,
+            "description": description,
+            "llm": llm_cfg,
+            "function_list": tools
+        }
+        return Assistant(system_message=prompt, **kwargs)
+
+    except Exception as e:
+        logger.error(f"No se pudo construir el agente {name}: {e}")
+        return None
+
+
+AGENTS: Dict[str, Any] = {}
+
+for agent_key, prompt in PROMPTS.items():
+    if agent_key == "orchestrator":
+        continue
+
+    AGENTS[agent_key] = build_agent(
+        name=agent_key,
+        description=f"Agente {agent_key}",
+        prompt=prompt,
+        tools=AGENT_TOOLS.get(agent_key, []),
+        llm_cfg=llm_main
+    )
+
+ROUTER = build_agent(
+    name="orchestrator",
+    description="Orquestador",
+    prompt=PROMPTS["orchestrator"],
+    tools=[],
+    llm_cfg=llm_router
+)
+
+ALLOWED_AGENTS = [k for k in PROMPTS.keys() if k != "orchestrator"]
+
 # =========================
 # Ejecución de agentes
 # =========================
