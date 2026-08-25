@@ -649,22 +649,22 @@ Si el sistema no está seguro, pide aclaración, ofrece alternativas y evita res
 # =========================
 
 AGENT_TOOLS = {
-    "tutor": [RagSearchTool],
-    "planner": [RagSearchTool],
-    "math": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool, RagSearchTool],
-    "physics": [SymbolicSolveTool, NumericEvaluateTool, RagSearchTool],
-    "solver": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool],
-    "verifier": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool],
+    "tutor": [RagSearchTool()],
+    "planner": [RagSearchTool()],
+    "math": [SymbolicSolveTool(), SymbolicIntegrateTool(), SymbolicDiffTool(), NumericEvaluateTool(), RagSearchTool()],
+    "physics": [SymbolicSolveTool(), NumericEvaluateTool(), RagSearchTool()],
+    "solver": [SymbolicSolveTool(), SymbolicIntegrateTool(), SymbolicDiffTool(), NumericEvaluateTool()],
+    "verifier": [SymbolicSolveTool(), SymbolicIntegrateTool(), SymbolicDiffTool(), NumericEvaluateTool()],
     "critic": [],
-    "exercise": [RagSearchTool],
-    "evaluator": [RagSearchTool],
-    "lab": [NumericEvaluateTool],
-    "librarian": [RagSearchTool],
+    "exercise": [RagSearchTool()],
+    "evaluator": [RagSearchTool()],
+    "lab": [NumericEvaluateTool()],
+    "librarian": [RagSearchTool()],
     "memory": [],
     "metacognition": [],
     "security": [],
     "analytics": [],
-    "multilevel": [RagSearchTool],
+    "multilevel": [RagSearchTool()],
     "recovery": [],
 }
 
