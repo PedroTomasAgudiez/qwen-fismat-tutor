@@ -204,4 +204,238 @@
       overflow-y: hidden;
       vertical-align: middle;
       padding: 1px 0;
-      font-size
+      font-size: inherit; /* Hereda del .assistant (0.95rem) */
+    }
+
+    .assistant mjx-container[display="true"] {
+      display: block;
+      margin: 0.8em 0;
+      text-align: center;
+      font-size: 1.05em; /* Ligeramente mayor para ecuaciones de bloque */
+    }
+
+    /* Scrollbar fino para fórmulas anchas */
+    .assistant mjx-container::-webkit-scrollbar { height: 4px; }
+    .assistant mjx-container::-webkit-scrollbar-track { background: transparent; }
+    .assistant mjx-container::-webkit-scrollbar-thumb {
+      background: #475569;
+      border-radius: 2px;
+    }
+
+    /* Forzar tamaño base de MathJax si el navegador ignora la config */
+    .assistant mjx-container,
+    .assistant mjx-container * {
+      font-size: inherit !important;
+    }
+
+    .assistant mjx-container[display="true"],
+    .assistant mjx-container[display="true"] * {
+      font-size: 1.05em !important;
+    }
+
+    /* ===== FORMULARIO ===== */
+    form {
+      display: grid;
+      grid-template-columns: 150px 1fr auto auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    select, textarea, button {
+      border-radius: 10px;
+      border: 1px solid #475569;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      font-family: inherit;
+    }
+
+    select, textarea {
+      background: #020617;
+      color: #e5e7eb;
+    }
+
+    textarea {
+      min-height: 50px;
+      max-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 600;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+    button:hover { background: #1d4ed8; }
+    button.secondary { background: #334155; }
+    button.secondary:hover { background: #475569; }
+
+    .status {
+      margin-top: 8px;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 700px) {
+      form { grid-template-columns: 1fr; }
+      .msg { max-width: 95%; font-size: 0.9rem; }
+      main { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>🧮 QwenFisMat Tutor</h1>
+    <div class="subtitle">
+      Tutor multiagente de física y matemáticas universitarias.
+    </div>
+
+    <div id="chat"></div>
+
+    <form id="chat-form">
+      <select id="mode" title="Modo del agente">
+        <option>Auto</option>
+        <option>Tutoría</option>
+        <option>Plan</option>
+        <option>Matemáticas</option>
+        <option>Física</option>
+        <option>Resolver</option>
+        <option>Verificar</option>
+        <option>Crítico</option>
+        <option>Ejercicios</option>
+        <option>Evaluación</option>
+        <option>Laboratorio</option>
+        <option>Documentos</option>
+        <option>Memoria</option>
+        <option>Metacognición</option>
+        <option>Seguridad</option>
+        <option>Analítica</option>
+        <option>Multinivel</option>
+        <option>Recuperación</option>
+      </select>
+
+      <textarea
+        id="message"
+        placeholder="Escriba su pregunta de física o matemáticas..."
+        required
+      ></textarea>
+
+      <button type="submit">Enviar</button>
+      <button type="button" class="secondary" id="new-session">Nueva sesión</button>
+    </form>
+
+    <div class="status" id="status">Sesión lista.</div>
+  </main>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("chat-form");
+    const messageInput = document.getElementById("message");
+    const modeSelect = document.getElementById("mode");
+    const statusEl = document.getElementById("status");
+    const newSessionBtn = document.getElementById("new-session");
+
+    // Configurar marked para que no procese LaTeX como Markdown
+    marked.setOptions({
+      breaks: true,
+      gfm: true,
+      headerIds: false,
+      mangle: false
+    });
+
+    function getSessionId() {
+      let sessionId = localStorage.getItem("qwen_fismat_session");
+      if (!sessionId) {
+        sessionId = (crypto.randomUUID)
+          ? crypto.randomUUID()
+          : Date.now().toString(36) + Math.random().toString(36).slice(2);
+        localStorage.setItem("qwen_fismat_session", sessionId);
+      }
+      return sessionId;
+    }
+
+    let sessionId = getSessionId();
+
+    function addMessage(role, text) {
+      const div = document.createElement("div");
+      div.className = `msg ${role}`;
+
+      if (role === "assistant") {
+        // Convertir Markdown a HTML
+        div.innerHTML = marked.parse(text);
+
+        // Renderizar LaTeX con MathJax después de insertar en el DOM
+        if (window.MathJax && MathJax.typesetPromise) {
+          MathJax.typesetPromise([div])
+            .then(() => {
+              chat.scrollTop = chat.scrollHeight;
+            })
+            .catch((err) => console.error("MathJax error:", err));
+        }
+      } else {
+        div.textContent = text;
+      }
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function setStatus(text) {
+      statusEl.textContent = text;
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const message = messageInput.value.trim();
+      if (!message) return;
+
+      addMessage("user", message);
+      messageInput.value = "";
+      setStatus("Consultando al tutor...");
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            session_id: sessionId,
+            mode: modeSelect.value,
+            message: message
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          addMessage("assistant", data.error || "Error del servidor.");
+          setStatus("Error.");
+          return;
+        }
+
+        sessionId = data.session_id || sessionId;
+        localStorage.setItem("qwen_fismat_session", sessionId);
+
+        addMessage("assistant", data.answer || "Sin respuesta.");
+        setStatus("Respuesta recibida.");
+      } catch (error) {
+        addMessage("assistant", "Error de conexión con el backend.");
+        setStatus("Error de conexión.");
+      }
+    });
+
+    newSessionBtn.addEventListener("click", () => {
+      sessionId = (crypto.randomUUID)
+        ? crypto.randomUUID()
+        : Date.now().toString(36) + Math.random().toString(36).slice(2);
+      localStorage.setItem("qwen_fismat_session", sessionId);
+      chat.innerHTML = "";
+      setStatus("Nueva sesión creada.");
+    });
+  </script>
+</body>
+</html>
