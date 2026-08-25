@@ -1,0 +1,18 @@
+Física universitaria básica.
+
+Cinemática:
+La cinemática estudia el movimiento sin considerar sus causas. La posición describe dónde está un objeto. La velocidad es la razón de cambio de la posición respecto al tiempo. La aceleración es la razón de cambio de la velocidad respecto al tiempo.
+
+Dinámica de Newton:
+La primera ley de Newton establece que un cuerpo permanece en reposo o movimiento rectilíneo uniforme si la fuerza neta sobre él es cero.
+La segunda ley de Newton establece que la fuerza neta es igual a la masa por la aceleración: F = m*a.
+La tercera ley de Newton establece que toda acción tiene una reacción igual y opuesta.
+
+Plano inclinado:
+En un plano inclinado sin fricción, el peso se descompone en una componente paralela al plano y una componente perpendicular. La componente perpendicular suele equilibrarse con la fuerza normal. La componente paralela produce aceleración a lo largo del plano.
+
+Trabajo y energía:
+El trabajo realizado por una fuerza constante es el producto de la componente de la fuerza en la dirección del desplazamiento por la magnitud del desplazamiento. La energía cinética es (1/2)*m*v^2. La energía potencial gravitatoria cerca de la superficie terrestre es m*g*h.
+
+Electromagnetismo:
+La ley de Coulomb describe la fuerza entre cargas eléctricas. El campo eléctrico es la fuerza por unidad de carga. La ley de Gauss relaciona el flujo del campo eléctrico a través de una superficie cerrada con la carga encerrada.
