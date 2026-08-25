@@ -7,7 +7,6 @@ import logging
 import pathlib
 from typing import Any, Dict, List, Optional
 
-import gradio as gr
 import requests
 import sympy as sp
 from supabase import create_client
@@ -893,85 +892,6 @@ class Orchestrator:
 
         return answer
 
-# =========================
-# Interfaz Gradio
-# =========================
-
-orchestrator = Orchestrator()
-
-
-def respond(session_id: str, mode: str, message: str, history: List[Dict[str, str]]):
-    if not session_id:
-        session_id = str(uuid.uuid4())
-
-    if not message.strip():
-        return history, "", session_id
-
-    try:
-        answer = orchestrator.handle(session_id, message, mode)
-    except Exception as e:
-        answer = f"Error general del sistema: {e}"
-
-    history = history + [
-        {"role": "user", "content": message},
-        {"role": "assistant", "content": answer}
-    ]
-
-    return history, "", session_id
-
-
-def new_session():
-    return [], "", str(uuid.uuid4())
-
-
-with gr.Blocks(title="QwenFisMat Tutor") as demo:
-    gr.Markdown("# 🧮 QwenFisMat Tutor")
-    gr.Markdown(
-        "Tutor multiagente de física y matemáticas basado en Qwen-Agent. "
-        "Puede preguntar conceptos, solicitar ejercicios, pedir verificación de soluciones o generar planes de estudio."
-    )
-
-    session_state = gr.State(str(uuid.uuid4()))
-
-    chatbot = gr.Chatbot(height=520, type="messages")
-
-    with gr.Row():
-        msg = gr.Textbox(
-            label="Mensaje",
-            placeholder="Escriba su pregunta de física o matemáticas...",
-            scale=4
-        )
-        mode = gr.Dropdown(
-            choices=["Auto"] + list(MODE_MAP.keys())[1:],
-            value="Auto",
-            label="Modo",
-            scale=1
-        )
-
-    with gr.Row():
-        send_btn = gr.Button("Enviar", variant="primary")
-        clear_btn = gr.Button("Limpiar mensaje")
-        new_btn = gr.Button("Nueva sesión")
-
-    send_btn.click(
-        respond,
-        inputs=[session_state, mode, msg, chatbot],
-        outputs=[chatbot, msg, session_state]
-    )
-
-    msg.submit(
-        respond,
-        inputs=[session_state, mode, msg, chatbot],
-        outputs=[chatbot, msg, session_state]
-    )
-
-    clear_btn.click(lambda: "", None, msg)
-
-    new_btn.click(
-        new_session,
-        None,
-        [chatbot, msg, session_state]
-    )
 
 # =========================
 # Arranque
@@ -983,7 +903,80 @@ if os.getenv("RUN_INGEST", "1") == "1":
     except Exception as e:
         logger.error(f"No se pudo ingestar el corpus: {e}")
 
-demo.queue().launch(
-    server_name="0.0.0.0",
-    server_port=int(os.getenv("PORT", "7860"))
+orchestrator = Orchestrator()
+# =========================
+# API FastAPI
+# =========================
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, JSONResponse
+from pydantic import BaseModel
+
+app = FastAPI(title="QwenFisMat Tutor")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+
+
+class ChatRequest(BaseModel):
+    session_id: Optional[str] = None
+    mode: str = "Auto"
+    message: str
+
+
+@app.on_event("startup")
+def startup_event():
+    if os.getenv("RUN_INGEST", "1") == "1":
+        try:
+            ingest_corpus()
+        except Exception as e:
+            logger.error(f"No se pudo ingestar el corpus: {e}")
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok", "service": "QwenFisMat Tutor"}
+
+
+@app.post("/chat")
+def chat(req: ChatRequest):
+    session_id = req.session_id or str(uuid.uuid4())
+
+    if not req.message.strip():
+        return JSONResponse(
+            status_code=400,
+            content={"error": "El mensaje no puede estar vacío."}
+        )
+
+    try:
+        answer = orchestrator.handle(session_id, req.message, req.mode)
+    except Exception as e:
+        logger.error(f"Error en /chat: {e}")
+        answer = f"Error del sistema: {e}"
+
+    return {
+        "session_id": session_id,
+        "answer": answer
+    }
+
+
+# Carpeta static
+static_dir = pathlib.Path("static")
+static_dir.mkdir(parents=True, exist_ok=True)
+
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+
+@app.get("/")
+def root():
+    index_file = static_dir / "index.html"
+    if index_file.exists():
+        return FileResponse(str(index_file))
+    return {"message": "Backend activo. Falta static/index.html."}
