@@ -1,2 +1,13 @@
-# qwen-fismat-tutor
-Tutor multiagente de física y matemáticas basado en Qwen-Agent
+---
+title: QwenFisMat Tutor
+emoji: 🧮
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+app_file: app.py
+pinned: false
+---
+
+# QwenFisMat Tutor
+
+Tutor multiagente para aprender física y matemáticas universitarias usando Qwen-Agent.
