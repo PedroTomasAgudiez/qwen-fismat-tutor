@@ -4,79 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>QwenFisMat Tutor</title>
-  
-  <!-- Librería para convertir Markdown a HTML -->
+
+  <!-- Marked.js para Markdown -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  
-  <!-- Configuración y librería MathJax para renderizar LaTeX -->
+
+  <!-- Configuración de MathJax ANTES de cargar la librería -->
   <script>
-    MathJax = {
+    window.MathJax = {
       tex: {
         inlineMath: [['$', '$'], ['\\(', '\\)']],
         displayMath: [['$$', '$$'], ['\\[', '\\]']],
-        processEscapes: true
+        processEscapes: true,
+        packages: {'[+]': ['ams']}
       },
-      svg: {
-        fontCache: 'global'
+      loader: {
+        load: ['[tex]/ams']
+      },
+      chtml: {
+        scale: 0.92,
+        minScaleAdjust: 0.75,
+        mtextInheritFont: true
+      },
+      options: {
+        enableMenu: false,
+        renderActions: {
+          addMenu: []
+        }
       },
       startup: {
         ready: () => {
           MathJax.startup.defaultReady();
+          MathJax.startup.promise.then(() => {
+            console.log('MathJax inicializado correctamente');
+          });
         }
       }
     };
   </script>
+
+  <!-- Motor CHTML (más predecible que SVG para tamaños) -->
   <script type="text/javascript" id="MathJax-script" async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
   </script>
+
   <style>
-    * { box-sizing: border-box; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 16px; }
 
     body {
-      margin: 0;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
       background: #0f172a;
       color: #e5e7eb;
+      line-height: 1.6;
     }
 
     main {
       max-width: 900px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 16px;
       display: flex;
       flex-direction: column;
       height: 100vh;
     }
 
-    h1 { font-size: 1.5rem; margin-bottom: 4px; }
-    .subtitle { color: #94a3b8; margin-bottom: 16px; font-size: 0.95rem; }
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 4px;
+      color: #f8fafc;
+    }
 
+    .subtitle {
+      color: #94a3b8;
+      margin-bottom: 14px;
+      font-size: 0.9rem;
+    }
+
+    /* ===== ÁREA DE CHAT ===== */
     #chat {
       flex: 1;
       overflow-y: auto;
       border: 1px solid #334155;
       border-radius: 12px;
-      padding: 16px;
+      padding: 14px;
       background: #111827;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
+      scroll-behavior: smooth;
     }
 
     .msg {
-      max-width: 85%;
+      max-width: 88%;
       padding: 12px 16px;
       border-radius: 12px;
-      margin-bottom: 14px;
-      line-height: 1.6;
-      font-size: 1rem; /* Base sólida para el escalado de MathJax */
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+      line-height: 1.65;
       word-wrap: break-word;
       overflow-wrap: break-word;
     }
 
     .user {
       background: #2563eb;
-      color: white;
+      color: #ffffff;
       margin-left: auto;
       border-bottom-right-radius: 4px;
+      white-space: pre-wrap;
     }
 
     .assistant {
@@ -86,279 +118,90 @@
       border-bottom-left-radius: 4px;
     }
 
-    /* ==========================================
-       ESTILOS PARA MARKDOWN Y MATHJAX CORREGIDOS
-       ========================================== */
-    .assistant p { margin: 0.5em 0; }
+    /* ===== ESTILOS MARKDOWN DENTRO DE RESPUESTAS ===== */
+    .assistant p { margin: 0.45em 0; }
     .assistant p:first-child { margin-top: 0; }
     .assistant p:last-child { margin-bottom: 0; }
-    
-    .assistant ul, .assistant ol { padding-left: 22px; margin: 0.5em 0; }
-    
+
+    .assistant ul, .assistant ol {
+      padding-left: 20px;
+      margin: 0.5em 0;
+    }
+
+    .assistant li { margin: 0.2em 0; }
+
+    .assistant h1, .assistant h2, .assistant h3, .assistant h4 {
+      margin: 0.7em 0 0.35em 0;
+      color: #f8fafc;
+      line-height: 1.3;
+    }
+    .assistant h1 { font-size: 1.25em; }
+    .assistant h2 { font-size: 1.15em; }
+    .assistant h3 { font-size: 1.05em; }
+
+    .assistant strong { color: #f8fafc; }
+    .assistant em { color: #cbd5e1; }
+
     .assistant code {
       background: #0f172a;
       padding: 2px 6px;
       border-radius: 4px;
-      font-family: 'Fira Code', monospace;
-      font-size: 0.9em;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 0.88em;
       color: #60a5fa;
     }
-    
+
     .assistant pre {
       background: #0f172a;
       padding: 12px;
       border-radius: 8px;
       overflow-x: auto;
       border: 1px solid #334155;
-      margin: 0.8em 0;
+      margin: 0.7em 0;
     }
-    
+
     .assistant pre code {
       background: transparent;
       padding: 0;
       color: #e5e7eb;
+      font-size: 0.85em;
     }
-    
+
     .assistant blockquote {
       border-left: 3px solid #475569;
-      margin: 0.5em 0;
       padding-left: 12px;
       color: #94a3b8;
-    }
-    
-    .assistant strong { color: #f8fafc; }
-    
-    .assistant h1, .assistant h2, .assistant h3, .assistant h4 {
-      margin: 0.8em 0 0.4em 0;
-      color: #f8fafc;
-      line-height: 1.3;
+      margin: 0.5em 0;
     }
 
-    /* Corrección clave: Forzar tamaño relativo y evitar desbordamiento */
-    .assistant mjx-container {
-      font-size: 1.05em !important; /* Evita que herede tamaños gigantes */
-      max-width: 100%;
-      overflow-x: auto; /* Scroll horizontal solo si es muy larga */
-      overflow-y: hidden;
-      display: inline-block;
-      vertical-align: middle;
-      padding: 2px 0;
+    .assistant table {
+      border-collapse: collapse;
+      margin: 0.7em 0;
+      width: 100%;
+      font-size: 0.9em;
     }
+    .assistant th, .assistant td {
+      border: 1px solid #374151;
+      padding: 6px 10px;
+      text-align: left;
+    }
+    .assistant th { background: #0f172a; color: #f8fafc; }
 
-    /* Ajuste específico para ecuaciones de bloque (centradas) */
-    .assistant mjx-container[display="true"] {
-      display: block;
-      margin: 1em 0;
-      text-align: center;
-      font-size: 1.15em !important;
-    }
-
-    /* Asegurar que el scroll interno no rompa el diseño móvil */
-    .assistant mjx-container::-webkit-scrollbar {
-      height: 4px;
-    }
-    .assistant mjx-container::-webkit-scrollbar-thumb {
-      background: #475569;
-      border-radius: 2px;
-    }
-
-    /* ==========================================
-       FORMULARIO Y CONTROLES
-       ========================================== */
-    form {
-      display: grid;
-      grid-template-columns: 150px 1fr auto auto;
-      gap: 10px;
-    }
-
-    select, textarea, button {
-      border-radius: 10px;
-      border: 1px solid #475569;
-      padding: 10px 12px;
-      font-size: 0.95rem;
-      font-family: inherit;
-    }
-
-    select, textarea {
-      background: #020617;
-      color: #e5e7eb;
-    }
-
-    textarea {
-      min-height: 52px;
-      resize: vertical;
-    }
-
-    button {
-      cursor: pointer;
+    .assistant hr {
       border: none;
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-      transition: background 0.2s;
-    }
-    button:hover { background: #1d4ed8; }
-
-    button.secondary { background: #334155; }
-    button.secondary:hover { background: #475569; }
-
-    .status {
-      margin-top: 10px;
-      color: #94a3b8;
-      font-size: 0.85rem;
-      text-align: center;
+      border-top: 1px solid #374151;
+      margin: 0.8em 0;
     }
 
-    @media (max-width: 700px) {
-      form { grid-template-columns: 1fr; }
-      .msg { max-width: 95%; }
-      .assistant mjx-container { font-size: 1em !important; }
-    }
-  </style>
+    /* ===== CONTROL DE TAMAÑO MATHJAX (CHTML) ===== */
+    /* El tamaño se controla principalmente desde la config JS (scale: 0.92).
+       Este CSS actúa como red de seguridad adicional. */
 
-</head>
-<body>
-  <main>
-    <h1>🧮 QwenFisMat Tutor</h1>
-    <div class="subtitle">
-      Tutor multiagente de física y matemáticas universitarias.
-    </div>
-
-    <div id="chat"></div>
-
-    <form id="chat-form">
-      <select id="mode">
-        <option>Auto</option>
-        <option>Tutoría</option>
-        <option>Plan</option>
-        <option>Matemáticas</option>
-        <option>Física</option>
-        <option>Resolver</option>
-        <option>Verificar</option>
-        <option>Crítico</option>
-        <option>Ejercicios</option>
-        <option>Evaluación</option>
-        <option>Laboratorio</option>
-        <option>Documentos</option>
-        <option>Memoria</option>
-        <option>Metacognición</option>
-        <option>Seguridad</option>
-        <option>Analítica</option>
-        <option>Multinivel</option>
-        <option>Recuperación</option>
-      </select>
-
-      <textarea
-        id="message"
-        placeholder="Escriba su pregunta de física o matemáticas..."
-        required
-      ></textarea>
-
-      <button type="submit">Enviar</button>
-      <button type="button" class="secondary" id="new-session">
-        Nueva sesión
-      </button>
-    </form>
-
-    <div class="status" id="status">Sesión lista.</div>
-  </main>
-
-  <script>
-    const chat = document.getElementById("chat");
-    const form = document.getElementById("chat-form");
-    const messageInput = document.getElementById("message");
-    const modeSelect = document.getElementById("mode");
-    const statusEl = document.getElementById("status");
-    const newSessionBtn = document.getElementById("new-session");
-
-    function getSessionId() {
-      let sessionId = localStorage.getItem("qwen_fismat_session");
-      if (!sessionId) {
-        sessionId = crypto.randomUUID
-          ? crypto.randomUUID()
-          : Date.now().toString(36) + Math.random().toString(36).slice(2);
-        localStorage.setItem("qwen_fismat_session", sessionId);
-      }
-      return sessionId;
-    }
-
-    let sessionId = getSessionId();
-
-    function addMessage(role, text) {
-      const div = document.createElement("div");
-      div.className = `msg ${role}`;
-      
-      if (role === "assistant") {
-        // 1. Convertir Markdown a HTML
-        div.innerHTML = marked.parse(text);
-        
-        // 2. Pedir a MathJax que renderice las fórmulas LaTeX dentro de este nuevo div
-        if (window.MathJax && window.MathJax.typesetPromise) {
-          MathJax.typesetPromise([div]).catch((err) => console.error("MathJax error:", err));
-        }
-      } else {
-        // Para el usuario, solo texto plano por seguridad y simplicidad
-        div.textContent = text;
-      }
-      
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function setStatus(text) {
-      statusEl.textContent = text;
-    }
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const message = messageInput.value.trim();
-      if (!message) return;
-
-      addMessage("user", message);
-      messageInput.value = "";
-      setStatus("Consultando al tutor...");
-
-      try {
-        const response = await fetch("/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            session_id: sessionId,
-            mode: modeSelect.value,
-            message: message
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          addMessage("assistant", data.error || "Error del servidor.");
-          setStatus("Error.");
-          return;
-        }
-
-        sessionId = data.session_id || sessionId;
-        localStorage.setItem("qwen_fismat_session", sessionId);
-
-        addMessage("assistant", data.answer || "Sin respuesta.");
-        setStatus("Respuesta recibida.");
-      } catch (error) {
-        addMessage("assistant", "Error de conexión con el backend.");
-        setStatus("Error de conexión.");
-      }
-    });
-
-    newSessionBtn.addEventListener("click", () => {
-      sessionId = crypto.randomUUID
-        ? crypto.randomUUID()
-        : Date.now().toString(36) + Math.random().toString(36).slice(2);
-      localStorage.setItem("qwen_fismat_session", sessionId);
-      chat.innerHTML = "";
-      setStatus("Nueva sesión creada.");
-    });
-  </script>
-</body>
-</html>
-</body>
-</html>
+    .assistant mjx-container {
+      display: inline-block;
+      max-width: 100%;
+      overflow-x: auto;
+      overflow-y: hidden;
+      vertical-align: middle;
+      padding: 1px 0;
+      font-size
