@@ -14,11 +14,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from qwen_agent.agents import Assistant
 
-try:
-    from qwen_agent.tools.registry import TOOL_REGISTRY
-    from qwen_agent.tools.base_tool import BaseTool
-except Exception:
-    from qwen_agent.tools import TOOL_REGISTRY, BaseTool
+from qwen_agent.tools.base
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("qwen-fismat")
@@ -900,12 +896,6 @@ class Orchestrator:
 # =========================
 # Arranque
 # =========================
-
-if os.getenv("RUN_INGEST", "1") == "1":
-    try:
-        ingest_corpus()
-    except Exception as e:
-        logger.error(f"No se pudo ingestar el corpus: {e}")
 
 orchestrator = Orchestrator()
 # =========================
