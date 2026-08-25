@@ -1,6 +1,7 @@
 qwen-agent
 dashscope
-gradio
+fastapi
+uvicorn[standard]
 requests
 sympy
 supabase
