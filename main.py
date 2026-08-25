@@ -383,7 +383,7 @@ def detect_math_intent(message: str) -> Optional[Dict[str, Any]]:
     y devuelve la herramienta + parámetros a ejecutar.
     """
     msg_lower = message.lower()
-
+    logger.info(f"Detectando intención matemática en: '{message[:100]}...'")
     # Detectar ecuaciones: "resuelve", "soluciona", "= 0", "x^2"
     equation_patterns = [
         r'resuelve\s+(?:la\s+)?ecuaci[oó]n\s*(.+)',
