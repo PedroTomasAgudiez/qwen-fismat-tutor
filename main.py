@@ -438,17 +438,46 @@ def detect_math_intent(message: str) -> Optional[Dict[str, Any]]:
             variable = var_match.group(1) if var_match else 'x'
             return {"tool": "symbolic_diff", "params": {"expression": expr, "variable": variable, "order": 1}}
 
-    # Detectar evaluación numérica: "calcula el valor", "evalúa"
-    eval_patterns = [
-        r'(?:calcula|eval[uú]a|halla)\s+(?:el\s+valor\s+(?:de\s+|numérico\s+de\s+))?(.+)',
+    # Detectar solicitudes de gráficas: "grafica", "representa", "dibuja", "plot"
+    plot_patterns = [
+        r'grafica[r]?\s+(?:la\s+)?(?:funci[oó]n\s+)?(?:f\(x\)\s*=\s*)?(.+?)(?:\s+(?:desde|en|de)\s+(?:x\s*=\s*)?-?\d+|\s+e\s+indica|\s+donde|\s+y\s+encuentra|$)',
+        r'representa[r]?\s+(?:gr[aá]ficamente\s+)?(?:la\s+)?(?:funci[oó]n\s+)?(?:f\(x\)\s*=\s*)?(.+?)(?:\s+(?:desde|en|de)\s+(?:x\s*=\s*)?-?\d+|\s+e\s+indica|\s+donde|\s+y\s+encuentra|$)',
+        r'dibuja[r]?\s+(?:la\s+)?(?:funci[oó]n\s+)?(?:f\(x\)\s*=\s*)?(.+?)(?:\s+(?:desde|en|de)\s+(?:x\s*=\s*)?-?\d+|\s+e\s+indica|\s+donde|\s+y\s+encuentra|$)',
+        r'plot(?:tea[r]?)?\s+(?:la\s+)?(?:funci[oó]n\s+)?(?:f\(x\)\s*=\s*)?(.+?)(?:\s+(?:desde|en|de)\s+(?:x\s*=\s*)?-?\d+|\s+e\s+indica|\s+donde|\s+y\s+encuentra|$)',
+        r'haz\s+(?:una\s+)?gr[aá]fica\s+(?:de\s+)?(?:la\s+)?(?:funci[oó]n\s+)?(?:f\(x\)\s*=\s*)?(.+?)(?:\s+(?:desde|en|de)\s+(?:x\s*=\s*)?-?\d+|\s+e\s+indica|\s+donde|\s+y\s+encuentra|$)',
     ]
-    for pattern in eval_patterns:
+    
+    for pattern in plot_patterns:
         match = re.search(pattern, msg_lower)
         if match:
             expr = match.group(1).strip()
-            # Solo si parece una expresión matemática
-            if re.search(r'[\d\+\-\*\/\^\(\)]', expr) and len(expr) < 100:
-                return {"tool": "numeric_evaluate", "params": {"expression": expr}}
+            
+            # Limpiar la expresión de texto no matemático
+            # Remover palabras comunes que no son parte de la función
+            expr = re.sub(r'\s+(?:desde|hasta|de|a|en|el|la|intervalo|desde|donde|corta|eje|encuentra|indica|intersecciones|raíces|y|e)\s*.*$', '', expr)
+            
+            # Remover "f(x) =" si quedó
+            expr = re.sub(r'^f\(x\)\s*=\s*', '', expr)
+            
+            # Remover espacios múltiples
+            expr = re.sub(r'\s+', '', expr)
+            
+            # Si la expresión está vacía después de limpiar, usar un fallback
+            if not expr or len(expr) < 3:
+                # Intentar extraer cualquier expresión matemática del mensaje original
+                fallback_match = re.search(r'[a-z0-9\+\-\*\/\^\(\)\.]+\s*[=<>]+\s*[a-z0-9\+\-\*\/\^\(\)\.]+', message)
+                if fallback_match:
+                    expr = fallback_match.group(0)
+                else:
+                    continue  # No se pudo extraer una expresión válida
+            
+            # Detectar rango si existe
+            range_match = re.search(r'de[sd]e\s+(?:x\s*=\s*)?(-?\d+(?:\.\d+)?)\s+(?:hasta|a)\s+(?:x\s*=\s*)?(-?\d+(?:\.\d+)?)', msg_lower)
+            x_min = float(range_match.group(1)) if range_match else -10
+            x_max = float(range_match.group(2)) if range_match else 10
+            
+            logger.info(f"Expresión extraída para gráfica: '{expr}'")
+            return {"tool": "plot_function", "params": {"expression": expr, "x_min": x_min, "x_max": x_max}}
 
         # Detectar solicitudes de gráficas: "grafica", "representa", "dibuja", "plot"
     plot_patterns = [
