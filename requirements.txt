@@ -3,11 +3,21 @@ dashscope
 fastapi
 uvicorn[standard]
 requests
-sympy
 supabase
 qdrant-client
-tqdm
+
+# Stack científico y dependencias ocultas de qwen-agent
+sympy
+numpy
+pandas
+scipy
+matplotlib
+python-dateutil
+typing_extensions
+
+# Utilidades adicionales de qwen-agent
+tiktoken
 json5
 openai
-tiktoken
 pillow
+pydantic
