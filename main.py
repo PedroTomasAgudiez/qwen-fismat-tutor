@@ -13,7 +13,7 @@ from supabase import create_client
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from qwen_agent.agents import Assistant
-from qwen_agent.tools.base_tool import BaseTool
+from qwen_agent.tools import BaseTool
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("qwen-fismat")
