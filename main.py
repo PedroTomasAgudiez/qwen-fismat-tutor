@@ -437,8 +437,8 @@ def numeric_evaluate(expression: str, variables: Optional[Dict[str, Any]] = None
 # Tools para Qwen-Agent
 # =========================
 
-@TOOL_REGISTRY.register("rag_search")
 class RagSearchTool(BaseTool):
+    name = "rag_search"
     description = "Busca información en la base de conocimiento de física y matemáticas."
     parameters = {
         "type": "object",
@@ -456,8 +456,8 @@ class RagSearchTool(BaseTool):
         return json.dumps(rag_search(query, top_k), ensure_ascii=False)
 
 
-@TOOL_REGISTRY.register("symbolic_solve")
 class SymbolicSolveTool(BaseTool):
+    name = "symbolic_solve"
     description = "Resuelve ecuaciones simbólicas usando SymPy."
     parameters = {
         "type": "object",
@@ -476,8 +476,8 @@ class SymbolicSolveTool(BaseTool):
         )
 
 
-@TOOL_REGISTRY.register("symbolic_integrate")
 class SymbolicIntegrateTool(BaseTool):
+    name = "symbolic_integrate"
     description = "Integra simbólicamente una expresión usando SymPy."
     parameters = {
         "type": "object",
@@ -503,8 +503,8 @@ class SymbolicIntegrateTool(BaseTool):
         )
 
 
-@TOOL_REGISTRY.register("symbolic_diff")
 class SymbolicDiffTool(BaseTool):
+    name = "symbolic_diff"
     description = "Deriva simbólicamente una expresión usando SymPy."
     parameters = {
         "type": "object",
@@ -528,8 +528,8 @@ class SymbolicDiffTool(BaseTool):
         )
 
 
-@TOOL_REGISTRY.register("numeric_evaluate")
 class NumericEvaluateTool(BaseTool):
+    name = "numeric_evaluate"
     description = "Evalúa numéricamente una expresión matemática."
     parameters = {
         "type": "object",
@@ -673,23 +673,27 @@ Si el sistema no está seguro, pide aclaración, ofrece alternativas y evita res
 """.strip(),
 }
 
-AGENT_TOOLS: Dict[str, List[str]] = {
-    "tutor": ["rag_search"],
-    "planner": ["rag_search"],
-    "math": ["symbolic_solve", "symbolic_integrate", "symbolic_diff", "numeric_evaluate", "rag_search"],
-    "physics": ["symbolic_solve", "numeric_evaluate", "rag_search"],
-    "solver": ["symbolic_solve", "symbolic_integrate", "symbolic_diff", "numeric_evaluate"],
-    "verifier": ["symbolic_solve", "symbolic_integrate", "symbolic_diff", "numeric_evaluate"],
+# =========================
+# Asignación de Tools a Agentes
+# =========================
+
+AGENT_TOOLS = {
+    "tutor": [RagSearchTool],
+    "planner": [RagSearchTool],
+    "math": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool, RagSearchTool],
+    "physics": [SymbolicSolveTool, NumericEvaluateTool, RagSearchTool],
+    "solver": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool],
+    "verifier": [SymbolicSolveTool, SymbolicIntegrateTool, SymbolicDiffTool, NumericEvaluateTool],
     "critic": [],
-    "exercise": ["rag_search"],
-    "evaluator": ["rag_search"],
-    "lab": ["numeric_evaluate"],
-    "librarian": ["rag_search"],
+    "exercise": [RagSearchTool],
+    "evaluator": [RagSearchTool],
+    "lab": [NumericEvaluateTool],
+    "librarian": [RagSearchTool],
     "memory": [],
     "metacognition": [],
     "security": [],
     "analytics": [],
-    "multilevel": ["rag_search"],
+    "multilevel": [RagSearchTool],
     "recovery": [],
 }
 
