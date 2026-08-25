@@ -234,6 +234,146 @@ def numeric_evaluate(expression: str, variables: Optional[Dict[str, Any]] = None
         return {"error": str(e)}
 
 # =========================
+# Herramienta de graficación (Matplotlib)
+# =========================
+
+import io
+import base64
+import numpy as np
+
+def plot_function(expression: str, x_min: float = -10, x_max: float = 10, title: str = "") -> Dict[str, Any]:
+    """
+    Genera una gráfica de una función matemática usando Matplotlib.
+    Devuelve la imagen en base64 para insertar en la respuesta.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')  # Backend sin interfaz gráfica
+        import matplotlib.pyplot as plt
+        
+        # Parsear la expresión
+        x_sym = sp.symbols('x')
+        expr = sp.sympify(expression)
+        
+        # Crear función numérica a partir de la simbólica
+        f = sp.lambdify(x_sym, expr, modules=['numpy'])
+        
+        # Generar puntos
+        x_vals = np.linspace(x_min, x_max, 500)
+        
+        try:
+            y_vals = f(x_vals)
+            # Manejar valores no finitos (asíntotas, etc.)
+            y_vals = np.where(np.isfinite(y_vals), y_vals, np.nan)
+        except Exception as e:
+            return {"error": f"No se pudo evaluar la función: {str(e)}"}
+        
+        # Crear la gráfica
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(x_vals, y_vals, 'b-', linewidth=2, label=f'f(x) = {expression}')
+        ax.axhline(y=0, color='k', linestyle='-', linewidth=0.5, alpha=0.3)
+        ax.axvline(x=0, color='k', linestyle='-', linewidth=0.5, alpha=0.3)
+        ax.grid(True, alpha=0.3)
+        ax.set_xlabel('x')
+        ax.set_ylabel('f(x)')
+        ax.set_title(title or f'Gráfica de f(x) = {expression}')
+        ax.legend()
+        
+        # Ajustar límites Y para evitar distorsiones por asíntotas
+        y_finite = y_vals[np.isfinite(y_vals)]
+        if len(y_finite) > 0:
+            y_median = np.median(y_finite)
+            y_std = np.std(y_finite)
+            y_range = max(abs(y_std) * 3, 5)
+            ax.set_ylim([y_median - y_range, y_median + y_range])
+        
+        plt.tight_layout()
+        
+        # Convertir a base64
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+        buffer.seek(0)
+        img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        plt.close(fig)
+        
+        # Calcular información adicional útil
+        roots = []
+        try:
+            roots_sols = sp.solve(expr, x_sym)
+            for sol in roots_sols:
+                try:
+                    val = float(sol)
+                    if x_min <= val <= x_max:
+                        roots.append(round(val, 4))
+                except:
+                    pass
+        except:
+            pass
+        
+        return {
+            "image_base64": img_base64,
+            "expression": expression,
+            "x_range": [x_min, x_max],
+            "roots": roots,
+            "status": "success"
+        }
+        
+    except Exception as e:
+        return {"error": f"Error generando gráfica: {str(e)}"}
+
+
+def plot_physics_trajectory(v0: float, angle_deg: float, g: float = 9.81) -> Dict[str, Any]:
+    """
+    Grafica la trayectoria de un proyectil.
+    """
+    try:
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        
+        angle_rad = np.radians(angle_deg)
+        vx = v0 * np.cos(angle_rad)
+        vy = v0 * np.sin(angle_rad)
+        
+        t_flight = 2 * vy / g
+        t_vals = np.linspace(0, t_flight, 200)
+        
+        x_vals = vx * t_vals
+        y_vals = vy * t_vals - 0.5 * g * t_vals**2
+        
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(x_vals, y_vals, 'b-', linewidth=2, label='Trayectoria')
+        ax.plot([0], [0], 'go', markersize=10, label='Lanzamiento')
+        ax.plot([x_vals[-1]], [0], 'ro', markersize=10, label='Impacto')
+        ax.grid(True, alpha=0.3)
+        ax.set_xlabel('Distancia horizontal (m)')
+        ax.set_ylabel('Altura (m)')
+        ax.set_title(f'Trayectoria de proyectil: v₀={v0} m/s, θ={angle_deg}°')
+        ax.legend()
+        ax.set_ylim(bottom=0)
+        plt.tight_layout()
+        
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=100, bbox_inches='tight')
+        buffer.seek(0)
+        img_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
+        plt.close(fig)
+        
+        max_height = (vy**2) / (2 * g)
+        max_range = (v0**2 * np.sin(2 * angle_rad)) / g
+        
+        return {
+            "image_base64": img_base64,
+            "max_height": round(max_height, 2),
+            "max_range": round(max_range, 2),
+            "flight_time": round(t_flight, 2),
+            "status": "success"
+        }
+        
+    except Exception as e:
+        return {"error": f"Error generando trayectoria: {str(e)}"}
+
+# =========================
 # DETECTOR AUTOMÁTICO DE MATEMÁTICAS
 # =========================
 
@@ -310,6 +450,38 @@ def detect_math_intent(message: str) -> Optional[Dict[str, Any]]:
             if re.search(r'[\d\+\-\*\/\^\(\)]', expr) and len(expr) < 100:
                 return {"tool": "numeric_evaluate", "params": {"expression": expr}}
 
+        # Detectar solicitudes de gráficas: "grafica", "representa", "dibuja", "plot"
+    plot_patterns = [
+        r'grafica[r]?\s+(?:la\s+)?(?:funci[oó]n\s+)?(.+)',
+        r'representa[r]?\s+(?:gr[aá]ficamente\s+)?(?:la\s+)?(?:funci[oó]n\s+)?(.+)',
+        r'dibuja[r]?\s+(?:la\s+)?(?:funci[oó]n\s+)?(.+)',
+        r'plot(?:tea[r]?)?\s+(.+)',
+        r'haz\s+(?:una\s+)?gr[aá]fica\s+(?:de\s+)?(.+)',
+    ]
+    for pattern in plot_patterns:
+        match = re.search(pattern, msg_lower)
+        if match:
+            expr = match.group(1).strip()
+            # Limpiar palabras residuales
+            expr = re.sub(r'(?:la función|desde|hasta|de|a|en el intervalo)', '', expr).strip()
+            # Detectar rango si existe
+            range_match = re.search(r'de\s+(-?\d+)\s+(?:a|hasta)\s+(-?\d+)', msg_lower)
+            x_min = float(range_match.group(1)) if range_match else -10
+            x_max = float(range_match.group(2)) if range_match else 10
+            return {"tool": "plot_function", "params": {"expression": expr, "x_min": x_min, "x_max": x_max}}
+
+    # Detectar trayectorias de proyectiles
+    projectile_patterns = [
+        r'(?:trayectoria|proyectil|lanzamiento)\s+.*?(?:velocidad|v[₀0])\s*[:=]?\s*(\d+(?:\.\d+)?)',
+        r'(?:velocidad|v[₀0])\s*[:=]?\s*(\d+(?:\.\d+)?)\s*(?:m/s)?.*?[aá]ngulo\s*[:=]?\s*(\d+)',
+    ]
+    for pattern in projectile_patterns:
+        match = re.search(pattern, msg_lower)
+        if match:
+            groups = match.groups()
+            v0 = float(groups[0]) if groups[0] else 20
+            angle = float(groups[1]) if len(groups) > 1 and groups[1] else 45
+            return {"tool": "plot_physics_trajectory", "params": {"v0": v0, "angle_deg": angle}}
     return None
 
 
@@ -327,6 +499,10 @@ def execute_tool(tool_name: str, params: Dict[str, Any]) -> str:
         result = rag_search(params.get("query", ""), int(params.get("top_k", 3)))
     else:
         result = {"error": f"Herramienta desconocida: {tool_name}"}
+        elif tool_name == "plot_function":
+        result = plot_function(params.get("expression", "x"), float(params.get("x_min", -10)), float(params.get("x_max", 10)), params.get("title", ""))
+    elif tool_name == "plot_physics_trajectory":
+        result = plot_physics_trajectory(float(params.get("v0", 20)), float(params.get("angle_deg", 45)), float(params.get("g", 9.81)))
     return json.dumps(result, ensure_ascii=False)
 
 # =========================
@@ -398,14 +574,16 @@ def save_event(session_id: str, event_type: str, payload: Dict[str, Any]):
 # =========================
 
 MATH_CONTEXT_TEMPLATE = """
-RESULTADO DE CÁLCULO SIMBÓLICO (ejecutado con SymPy):
+RESULTADO DE CÁLCULO (ejecutado automáticamente):
 Herramienta usada: {tool_name}
 Parámetros: {params}
 Resultado: {result}
 
-Usa este resultado verificado para explicar la solución al estudiante de forma pedagógica.
-NO digas que no puedes ejecutar código. El código YA fue ejecutado y el resultado está arriba.
-Explica el procedimiento paso a paso usando este resultado.
+Usa este resultado verificado para explicar la solución al estudiante.
+NO digas que no puedes ejecutar código. El cálculo YA fue ejecutado.
+Si el resultado contiene una imagen en base64, INCRÚSTALA en tu respuesta usando:
+<img src="data:image/png;base64,AQUI_EL_BASE64" style="max-width:100%; border-radius:8px; margin:10px 0;">
+Explica lo que muestra la gráfica de forma pedagógica.
 """
 
 BASE_PROMPT = """
