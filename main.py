@@ -813,6 +813,64 @@ ALLOWED_AGENTS = [k for k in PROMPTS.keys() if k != "orchestrator"]
 # Ejecución de agentes
 # =========================
 
+# =========================
+# Detector y ejecutor de herramientas
+# =========================
+
+import re as regex_tool
+
+def detect_and_execute_tools(text: str) -> str:
+    """
+    Detecta solicitudes de herramientas en formato [TOOL: name | {params}]
+    y las ejecuta, reemplazando la solicitud con el resultado.
+    """
+    tool_pattern = r'\[TOOL:\s*(\w+)\s*\|\s*(\{.*?\})\s*\]'
+    
+    def replace_tool_call(match):
+        tool_name = match.group(1)
+        try:
+            params = json.loads(match.group(2))
+        except json.JSONDecodeError:
+            return f"[Error: parámetros inválidos para {tool_name}]"
+        
+        # Ejecutar la herramienta correspondiente
+        if tool_name == "symbolic_solve":
+            result = symbolic_solve(
+                params.get("expression", ""),
+                params.get("symbols", "x")
+            )
+        elif tool_name == "symbolic_integrate":
+            result = symbolic_integrate(
+                params.get("expression", ""),
+                params.get("variable", "x"),
+                params.get("lower"),
+                params.get("upper")
+            )
+        elif tool_name == "symbolic_diff":
+            result = symbolic_diff(
+                params.get("expression", ""),
+                params.get("variable", "x"),
+                int(params.get("order", 1))
+            )
+        elif tool_name == "numeric_evaluate":
+            result = numeric_evaluate(
+                params.get("expression", ""),
+                params.get("variables")
+            )
+        elif tool_name == "rag_search":
+            result = rag_search(
+                params.get("query", ""),
+                int(params.get("top_k", 3))
+            )
+        else:
+            result = {"error": f"Herramienta desconocida: {tool_name}"}
+        
+        return f"[RESULTADO de {tool_name}]: {json.dumps(result, ensure_ascii=False)}"
+    
+    # Reemplazar todas las llamadas a herramientas
+    processed_text = regex_tool.sub(replace_tool_call, text)
+    return processed_text
+
 def extract_text(event: Any) -> str:
     try:
         if isinstance(event, list) and event:
