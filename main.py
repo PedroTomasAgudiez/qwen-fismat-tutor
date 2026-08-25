@@ -688,14 +688,10 @@ def build_agent(name: str, description: str, prompt: str, tools: List[Any], llm_
         kwargs = {
             "name": name,
             "description": description,
-            "llm_cfg": llm_cfg,
+            "llm": llm_cfg,  # <-- EL CAMBIO CLAVE: 'llm' en lugar de 'llm_cfg'
             "function_list": tools
         }
-
-        try:
-            return Assistant(system_message=prompt, **kwargs)
-        except TypeError:
-            return Assistant(system=prompt, **kwargs)
+        return Assistant(system_message=prompt, **kwargs)
 
     except Exception as e:
         logger.error(f"No se pudo construir el agente {name}: {e}")
