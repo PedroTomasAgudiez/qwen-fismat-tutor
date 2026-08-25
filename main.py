@@ -1,3 +1,19 @@
+import sys
+from unittest.mock import MagicMock
+
+# Engañamos a Python para que crea que las librerías opcionales de qwen-agent están instaladas.
+# Esto evita errores de ModuleNotFoundError en entornos serverless estrictos.
+MOCK_MODULES = [
+    'tqdm', 'tqdm.auto', 'tqdm.std',
+    'dateutil', 'dateutil.relativedelta',
+    'numpy', 'pandas', 'scipy', 'matplotlib', 'matplotlib.pyplot',
+    'soundfile', 'tiktoken', 'json5', 'PIL', 'PIL.Image'
+]
+
+for mod in MOCK_MODULES:
+    if mod not in sys.modules:
+        sys.modules[mod] = MagicMock()
+
 import os
 import re
 import json
