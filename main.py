@@ -13,8 +13,7 @@ from supabase import create_client
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, VectorParams, PointStruct
 from qwen_agent.agents import Assistant
-
-from qwen_agent.tools.base
+from qwen_agent.tools.base_tool import BaseTool
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("qwen-fismat")
@@ -70,10 +69,6 @@ except Exception as e:
 # =========================
 
 def parse_params(params: Any) -> Dict[str, Any]:
-    """
-    Convierte parámetros de herramientas a diccionario.
-    Qwen-Agent puede entregar JSON como string o como dict.
-    """
     if isinstance(params, dict):
         return params
     if isinstance(params, str):
@@ -85,10 +80,6 @@ def parse_params(params: Any) -> Dict[str, Any]:
 
 
 def hf_embed(texts: List[str]) -> List[List[float]]:
-    """
-    Obtiene embeddings usando Hugging Face Inference API.
-    Se usa un modelo multilingüe pequeño para no depender de recursos locales.
-    """
     if not HF_TOKEN:
         logger.warning("HF_TOKEN no configurado. RAG sin embeddings.")
         return []
@@ -107,13 +98,10 @@ def hf_embed(texts: List[str]) -> List[List[float]]:
 
             if response.status_code == 200:
                 data = response.json()
-
                 if isinstance(data, list):
                     return data
-
                 if isinstance(data, dict) and "embeddings" in data:
                     return data["embeddings"]
-
                 if (
                     isinstance(data, list)
                     and data
@@ -121,7 +109,6 @@ def hf_embed(texts: List[str]) -> List[List[float]]:
                     and "embedding" in data[0]
                 ):
                     return [item["embedding"] for item in data]
-
                 return []
 
             if response.status_code == 503:
@@ -140,9 +127,6 @@ def hf_embed(texts: List[str]) -> List[List[float]]:
 
 
 def chunk_text(text: str, max_chars: int = 900) -> List[str]:
-    """
-    Divide texto en fragmentos para RAG.
-    """
     paragraphs = [p.strip() for p in re.split(r"\n{2,}", text) if p.strip()]
     chunks: List[str] = []
     current = ""
@@ -168,9 +152,6 @@ def chunk_text(text: str, max_chars: int = 900) -> List[str]:
 
 
 def ensure_collection(vector_size: int):
-    """
-    Crea la colección Qdrant si no existe.
-    """
     if not qdrant:
         return
 
@@ -189,9 +170,6 @@ def ensure_collection(vector_size: int):
 
 
 def ingest_corpus():
-    """
-    Ingresa documentos de data/corpus a Qdrant.
-    """
     if not qdrant:
         logger.warning("Qdrant no configurado. Se omite ingesta RAG.")
         return
@@ -237,9 +215,6 @@ def ingest_corpus():
 
 
 def rag_search(query: str, top_k: int = 3) -> Dict[str, Any]:
-    """
-    Busca en la base vectorial.
-    """
     if not qdrant:
         return {"note": "RAG no configurado."}
 
@@ -708,7 +683,7 @@ llm_router = {
 }
 
 
-def build_agent(name: str, description: str, prompt: str, tools: List[str], llm_cfg: Dict[str, Any]):
+def build_agent(name: str, description: str, prompt: str, tools: List[Any], llm_cfg: Dict[str, Any]):
     try:
         kwargs = {
             "name": name,
@@ -898,6 +873,7 @@ class Orchestrator:
 # =========================
 
 orchestrator = Orchestrator()
+
 # =========================
 # API FastAPI
 # =========================
