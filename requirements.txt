@@ -1,0 +1,7 @@
+qwen-agent
+dashscope
+gradio
+requests
+sympy
+supabase
+qdrant-client
