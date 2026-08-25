@@ -497,12 +497,12 @@ def execute_tool(tool_name: str, params: Dict[str, Any]) -> str:
         result = numeric_evaluate(params.get("expression", ""), params.get("variables"))
     elif tool_name == "rag_search":
         result = rag_search(params.get("query", ""), int(params.get("top_k", 3)))
-    else:
-        result = {"error": f"Herramienta desconocida: {tool_name}"}
-        elif tool_name == "plot_function":
+    elif tool_name == "plot_function":
         result = plot_function(params.get("expression", "x"), float(params.get("x_min", -10)), float(params.get("x_max", 10)), params.get("title", ""))
     elif tool_name == "plot_physics_trajectory":
         result = plot_physics_trajectory(float(params.get("v0", 20)), float(params.get("angle_deg", 45)), float(params.get("g", 9.81)))
+    else:
+        result = {"error": f"Herramienta desconocida: {tool_name}"}
     return json.dumps(result, ensure_ascii=False)
 
 # =========================
